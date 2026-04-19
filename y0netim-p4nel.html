@@ -205,10 +205,17 @@
                 <h3 style="margin:28px 0 18px;">Veritabanı Bağlantısı</h3>
                 <div class="form-group">
                     <label>Firebase Realtime Database URL</label>
-                    <input type="url" class="form-input" id="setting-firebase-url" maxlength="250" placeholder="https://proje-adi-default-rtdb.firebaseio.com">
-                    <span class="form-hint">Bu alan doldurulduğunda projeler bulutta saklanır ve tüm ziyaretçilere görünür.</span>
+                    <div style="display:flex; gap:10px; align-items:stretch;">
+                        <input type="url" class="form-input" id="setting-firebase-url" maxlength="250" placeholder="https://proje-adi-default-rtdb.firebaseio.com" style="flex:1;">
+                        <button type="button" class="btn btn-secondary" id="btn-test-firebase" style="white-space:nowrap;">Test Et</button>
+                    </div>
+                    <span class="form-hint">
+                        <strong>1.</strong> URL'i yapıştır → <strong>Test Et</strong> ile bağlantıyı doğrula → <strong>Ayarları Kaydet</strong>.<br>
+                        <strong>2.</strong> Kaydettikten sonra <strong>Dışa Aktar</strong> sekmesinden <code>data.js</code>'i indir ve repo'nun <code>js/</code> klasörüne yükle — yoksa ziyaretçiler projeleri göremez.<br>
+                        Örnek URL: <code>https://proje-adi-default-rtdb.firebaseio.com</code> — sonuna <code>.json</code> eklemeyin.
+                    </span>
                 </div>
-                <div id="firebase-status" style="margin-bottom:18px;"></div>
+                <div id="firebase-status" style="margin-bottom:18px; padding:12px 16px; background:var(--bg-alt); border-radius:var(--radius-sm); min-height:20px;"></div>
 
                 <h3 style="margin:28px 0 18px;">Hakkımızda İçeriği</h3>
                 <div class="form-group">
@@ -232,15 +239,18 @@
             <div class="admin-header">
                 <h1>Veriyi Dışa / İçe Aktar</h1>
             </div>
-            <div style="max-width:620px;">
-                <p style="color:var(--text-light);margin-bottom:20px;">
-                    Proje verilerinizi <strong>data.js</strong> dosyası olarak dışa aktarın.
-                    Bu dosyayı projenizin <code>js/</code> klasörüne koyarak sitenizi güncelleyebilirsiniz.
-                </p>
+            <div style="max-width:680px;">
+                <div style="padding:18px 22px; background:#E8F3E8; border:1px solid #B9D9B9; border-radius:var(--radius-md); margin-bottom:24px; color:#3F6F3F;">
+                    <strong>Neden gerekli?</strong><br>
+                    Admin panelinde yaptığın değişiklikler hemen <strong>Firebase'e yazılır</strong> ve tüm ziyaretçilere görünür. Ancak Firebase URL'i her ziyaretçinin tarayıcısına verilmelidir — bunun için <code>data.js</code>'i indir ve repo'nun <code>js/</code> klasörüne yükle. Yoksa sadece senin tarayıcın projeleri görür.
+                </div>
                 <button class="btn btn-primary btn-lg" id="btn-export" type="button">↓ data.js Olarak İndir</button>
-                <br><br>
+                <div style="margin-top:12px; color:var(--text-light); font-size:0.9rem;">
+                    Bu dosya: projeler + kategoriler + ayarlar + Firebase URL içerir.
+                </div>
+                <hr style="margin:32px 0; border:none; border-top:1px solid var(--border-soft);">
                 <h3 style="margin-bottom:14px;">Veri İçe Aktar</h3>
-                <p style="color:var(--text-light);margin-bottom:14px;">Mevcut bir data.js dosyasından veri yükleyin.</p>
+                <p style="color:var(--text-light);margin-bottom:14px;">Mevcut bir <code>data.js</code> dosyasından veri yükleyin (yedekten geri dönme için).</p>
                 <input type="file" id="import-file" accept=".js" style="display:none;">
                 <button class="btn btn-secondary" id="btn-import" type="button">↑ data.js Yükle</button>
             </div>

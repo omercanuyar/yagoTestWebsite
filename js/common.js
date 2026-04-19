@@ -7,6 +7,21 @@
 /* ===== BULUT VERİ SENKRONİZASYONU (Firebase Realtime DB) ===== */
 var _cloudDataReady = false;
 var _cloudCallbacks = [];
+var FIREBASE_URL_KEY = 'kc_firebase_url';
+
+/* Bootstrapping: localStorage'da kayıtlı Firebase URL varsa SITE_DATA'ya yükle.
+   data.js statik olduğu için admin panelinde yapılan URL değişikliği bu sayede
+   sayfa yenilemesinden sonra da korunur (aynı tarayıcı için). */
+(function bootstrapFirebaseURL() {
+    try {
+        if (typeof SITE_DATA === 'undefined') return;
+        if (!SITE_DATA.settings) SITE_DATA.settings = {};
+        var stored = localStorage.getItem(FIREBASE_URL_KEY);
+        if (stored && !SITE_DATA.settings.firebaseURL) {
+            SITE_DATA.settings.firebaseURL = stored;
+        }
+    } catch(e) { /* localStorage engellenmiş olabilir */ }
+})();
 
 function onCloudDataReady(fn) {
     if (_cloudDataReady) {
@@ -38,33 +53,76 @@ function loadFromCloud() {
     }
     fetch(url + '/site.json')
         .then(function(res) {
-            if (!res.ok) throw new Error('Network error');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
             return res.json();
         })
         .then(function(data) {
-            if (data && Array.isArray(data.projects)) {
+            if (data && typeof data === 'object') {
                 var fbUrl = SITE_DATA.settings.firebaseURL;
-                SITE_DATA.projects = data.projects;
-                SITE_DATA.categories = data.categories || SITE_DATA.categories;
+                if (Array.isArray(data.projects)) SITE_DATA.projects = data.projects;
+                if (Array.isArray(data.categories)) SITE_DATA.categories = data.categories;
                 if (data.settings) SITE_DATA.settings = data.settings;
                 SITE_DATA.settings.firebaseURL = fbUrl;
             }
         })
-        .catch(function() { /* çevrimdışı veya hata - yerel veri kullanılır */ })
+        .catch(function(err) {
+            console.warn('loadFromCloud hatası:', err && err.message);
+        })
         .then(function() { _fireCloudCallbacks(); });
 }
 
 function saveToCloud(data) {
     var url = _getFirebaseURL();
-    if (!url) return Promise.resolve();
+    if (!url) return Promise.resolve({ skipped: true });
     var payload = JSON.parse(JSON.stringify(data));
     if (payload.settings) delete payload.settings.firebaseURL;
     return fetch(url + '/site.json', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-    }).catch(function() {
-        if (typeof showToast === 'function') showToast('Bulut senkronizasyonu başarısız oldu', 'error');
+    }).then(function(res) {
+        if (!res.ok) {
+            return res.text().then(function(body) {
+                var err = new Error('HTTP ' + res.status + (body ? (' — ' + body.slice(0, 160)) : ''));
+                err.status = res.status;
+                throw err;
+            });
+        }
+        return { ok: true };
+    }).catch(function(err) {
+        if (typeof showToast === 'function') {
+            var msg = 'Bulut kaydı başarısız: ' + (err && err.message ? err.message : 'bilinmeyen hata');
+            if (err && err.status === 401) msg = 'Firebase: yetkisiz (401) — kurallar yazmayı reddediyor.';
+            else if (err && err.status === 403) msg = 'Firebase: erişim reddedildi (403) — kurallar yazmayı reddediyor.';
+            else if (err && err.status === 404) msg = 'Firebase: veritabanı bulunamadı (404) — URL yanlış olabilir.';
+            showToast(msg, 'error');
+        }
+        console.error('saveToCloud error:', err);
+        throw err;
+    });
+}
+
+/* Firebase URL'ini test et — veritabanına bir ping yazar ve siler. */
+function testCloudConnection(testUrl) {
+    var url = (testUrl || '').replace(/\/+$/, '');
+    if (!url) return Promise.reject(new Error('URL boş'));
+    var probe = url + '/_connection_test.json';
+    var now = Date.now();
+    return fetch(probe, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ts: now })
+    }).then(function(res) {
+        if (!res.ok) {
+            return res.text().then(function(body) {
+                var err = new Error('HTTP ' + res.status + (body ? (' — ' + body.slice(0, 160)) : ''));
+                err.status = res.status;
+                throw err;
+            });
+        }
+        /* Test kaydını temizle */
+        fetch(probe, { method: 'DELETE' }).catch(function() {});
+        return { ok: true, latency: Date.now() - now };
     });
 }
 

@@ -743,6 +743,13 @@
             var fb = document.getElementById('setting-firebase-url').value.trim().replace(/\/+$/, '');
             s.firebaseURL = fb;
             SITE_DATA.settings.firebaseURL = fb;
+            /* Firebase URL'i localStorage'a yaz — sayfa yenilense bile
+               bu tarayıcıda korunur. Ziyaretçilerin de görmesi için ayrıca
+               Dışa Aktar ile data.js indirilip repo'ya yüklenmeli. */
+            try {
+                if (fb) localStorage.setItem(FIREBASE_URL_KEY, fb);
+                else localStorage.removeItem(FIREBASE_URL_KEY);
+            } catch(e) {}
 
             if (!s.about) s.about = {};
             s.about.story = document.getElementById('setting-about-story').value.trim();
@@ -753,6 +760,46 @@
             updateFirebaseStatus();
             showToast('Ayarlar kaydedildi', 'success');
         });
+
+        /* Test Bağlantı butonu */
+        var testBtn = document.getElementById('btn-test-firebase');
+        if (testBtn) {
+            testBtn.addEventListener('click', function() {
+                var raw = document.getElementById('setting-firebase-url').value.trim();
+                if (!raw) {
+                    showToast('Önce Firebase URL girin', 'error');
+                    return;
+                }
+                testBtn.disabled = true;
+                var original = testBtn.textContent;
+                testBtn.textContent = 'Test ediliyor...';
+                var statusEl = document.getElementById('firebase-status');
+                if (statusEl) statusEl.innerHTML = '<span style="color:var(--text-light);">⟳ Firebase bağlantısı test ediliyor...</span>';
+
+                testCloudConnection(raw).then(function(result) {
+                    if (statusEl) {
+                        statusEl.innerHTML = '<span style="color:var(--success); font-weight:600;">✓ Bağlantı başarılı (' + result.latency + 'ms) — yazma/okuma çalışıyor</span>';
+                    }
+                    showToast('Firebase bağlantısı doğrulandı', 'success');
+                }).catch(function(err) {
+                    var msg = err && err.message ? err.message : 'bilinmeyen hata';
+                    var hint = '';
+                    if (err && err.status === 401) hint = 'Kurallar yazmayı reddediyor. Firebase Console > Realtime Database > Rules bölümünden kuralları kontrol edin.';
+                    else if (err && err.status === 403) hint = 'Erişim reddedildi. Kurallar yazmaya izin vermiyor.';
+                    else if (err && err.status === 404) hint = 'URL yanlış veya veritabanı oluşturulmamış. Örnek: https://proje-adi-default-rtdb.firebaseio.com';
+                    else if (!err.status) hint = 'Ağ hatası veya CORS. URL\'de yazım hatası olabilir.';
+
+                    if (statusEl) {
+                        statusEl.innerHTML = '<div style="color:var(--danger); font-weight:600;">✗ Bağlantı başarısız: ' + sanitize(msg) + '</div>' +
+                            (hint ? '<div style="color:var(--text-light); margin-top:6px; font-size:0.88rem;">' + sanitize(hint) + '</div>' : '');
+                    }
+                    showToast('Firebase testi başarısız', 'error');
+                }).then(function() {
+                    testBtn.disabled = false;
+                    testBtn.textContent = original;
+                });
+            });
+        }
     }
 
     function loadSettings() {
