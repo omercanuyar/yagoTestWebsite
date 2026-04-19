@@ -139,3 +139,15 @@ koccihanoglu-mimarlik/
     ├── contact.js          # İletişim formu
     └── admin.js            # Admin paneli
 ```
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDvUT-BuFCQymude7E2UMEnFLFfgWyfSwI",
+  authDomain: "website-database-5a6bd.firebaseapp.com",
+  databaseURL: "https://website-database-5a6bd-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "website-database-5a6bd",
+  storageBucket: "website-database-5a6bd.firebasestorage.app",
+  messagingSenderId: "1078341676731",
+  appId: "1:1078341676731:web:ebf5b1c6430c2906fc439e",
+  measurementId: "G-W4B2VMRX3K"
+};
