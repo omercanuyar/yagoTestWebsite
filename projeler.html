@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projeler | Koçcihanoğlu Mimarlık</title>
+    <meta name="description" content="Koçcihanoğlu Mimarlık'ın konut, ticari, ofis, restorasyon ve iç mimari kategorilerindeki tamamlanmış proje portföyü.">
+    <meta name="keywords" content="mimari projeler, konut projeleri, ticari mimari, restorasyon projeleri, iç mimari, Koçcihanoğlu">
+    <meta name="theme-color" content="#8B9A82">
+    <link rel="canonical" href="https://koccihanoglu.github.io/projeler.html">
+
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:title" content="Projeler | Koçcihanoğlu Mimarlık">
+    <meta property="og:description" content="Konut, ticari, ofis ve restorasyon kategorilerinde tamamlanmış mimari projeler.">
+    <meta property="og:url" content="https://koccihanoglu.github.io/projeler.html">
+    <meta property="og:image" content="https://koccihanoglu.github.io/favicon.svg">
+
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <a href="index.html" class="logo" aria-label="Ana Sayfa">
+            <img src="favicon.svg" alt="" width="42" height="42">
+            <span class="logo-text">
+                <span class="logo-name">Koçcihanoğlu</span>
+                <span class="logo-sub">Mimarlık</span>
+            </span>
+        </a>
+        <nav class="nav-desktop" aria-label="Ana menü">
+            <a href="index.html">Ana Sayfa</a>
+            <a href="projeler.html" class="active">Projeler</a>
+            <a href="hakkimizda.html">Hakkımızda</a>
+            <a href="iletisim.html">İletişim</a>
+        </nav>
+        <div class="header-actions">
+            <a href="iletisim.html" class="header-cta">Teklif Alın</a>
+            <button class="hamburger" aria-label="Menü">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="mobile-nav">
+    <div class="mobile-nav-content">
+        <a href="index.html">Ana Sayfa</a>
+        <a href="projeler.html">Projeler</a>
+        <a href="hakkimizda.html">Hakkımızda</a>
+        <a href="iletisim.html">İletişim</a>
+    </div>
+</div>
+
+<main class="page-content">
+
+    <section class="about-hero">
+        <div class="container">
+            <span class="eyebrow">Portföy</span>
+            <h1>Projelerimiz</h1>
+            <p class="lead">Farklı ölçek ve kategorilerde tamamladığımız mimari projelerden bir seçki. Filtreleri kullanarak ilgilendiğiniz kategoriye odaklanabilirsiniz.</p>
+        </div>
+    </section>
+
+    <section class="section" style="padding-top:40px;">
+        <div class="container">
+            <div class="category-filter" id="category-filter" role="tablist" aria-label="Kategori filtresi"></div>
+            <div class="projects-grid" id="projects-grid" aria-live="polite"></div>
+            <div class="empty-state" id="projects-empty" style="display:none;">
+                <h3>Henüz proje yok</h3>
+                <p>Bu kategoride henüz proje bulunmuyor. Diğer kategorilere göz atabilirsiniz.</p>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="footer-logo">
+                    <img src="favicon.svg" alt="" width="40" height="40">
+                    <div>
+                        <div class="name">Koçcihanoğlu</div>
+                        <div class="sub">Mimarlık</div>
+                    </div>
+                </div>
+                <p>Mekâna değer katan mimari çözümler.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Menü</h4>
+                <a href="index.html">Ana Sayfa</a>
+                <a href="projeler.html">Projeler</a>
+                <a href="hakkimizda.html">Hakkımızda</a>
+                <a href="iletisim.html">İletişim</a>
+            </div>
+            <div class="footer-col">
+                <h4>Hizmetler</h4>
+                <a href="projeler.html?kategori=Konut">Konut</a>
+                <a href="projeler.html?kategori=Ticari">Ticari</a>
+                <a href="projeler.html?kategori=Restorasyon">Restorasyon</a>
+            </div>
+            <div class="footer-col">
+                <h4>İletişim</h4>
+                <p><a href="#" data-site-setting="phone">+90 555 000 00 00</a></p>
+                <p><a href="#" data-site-setting="email">info@koccihanoglu.com</a></p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; <span id="footer-year">2025</span> Koçcihanoğlu Mimarlık. Tüm hakları saklıdır.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/common.js"></script>
+<script src="js/projects.js"></script>
+</body>
+</html>

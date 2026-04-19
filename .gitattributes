@@ -1,0 +1,5 @@
+# Tutarlı satır sonu
+* text=auto eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf

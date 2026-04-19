@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proje Detayı | Koçcihanoğlu Mimarlık</title>
+    <meta name="description" content="Koçcihanoğlu Mimarlık proje detayı - mimari tasarım, konum, yıl ve görsel galeri.">
+    <meta name="theme-color" content="#8B9A82">
+
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:title" content="Proje Detayı | Koçcihanoğlu Mimarlık">
+    <meta property="og:description" content="Mimari proje detayı.">
+    <meta property="og:image" content="https://koccihanoglu.github.io/favicon.svg">
+
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <a href="index.html" class="logo" aria-label="Ana Sayfa">
+            <img src="favicon.svg" alt="" width="42" height="42">
+            <span class="logo-text">
+                <span class="logo-name">Koçcihanoğlu</span>
+                <span class="logo-sub">Mimarlık</span>
+            </span>
+        </a>
+        <nav class="nav-desktop" aria-label="Ana menü">
+            <a href="index.html">Ana Sayfa</a>
+            <a href="projeler.html">Projeler</a>
+            <a href="hakkimizda.html">Hakkımızda</a>
+            <a href="iletisim.html">İletişim</a>
+        </nav>
+        <div class="header-actions">
+            <a href="iletisim.html" class="header-cta">Teklif Alın</a>
+            <button class="hamburger" aria-label="Menü">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="mobile-nav">
+    <div class="mobile-nav-content">
+        <a href="index.html">Ana Sayfa</a>
+        <a href="projeler.html">Projeler</a>
+        <a href="hakkimizda.html">Hakkımızda</a>
+        <a href="iletisim.html">İletişim</a>
+    </div>
+</div>
+
+<main class="page-content">
+    <div class="container">
+
+        <article id="project-detail" class="project-hero" itemscope itemtype="https://schema.org/CreativeWork">
+            <nav class="breadcrumb" aria-label="breadcrumb">
+                <a href="index.html">Ana Sayfa</a>
+                <span class="separator">›</span>
+                <a href="projeler.html" id="bc-category">Projeler</a>
+                <span class="separator">›</span>
+                <span id="bc-name">Proje</span>
+            </nav>
+
+            <div class="project-meta-line" id="project-meta-line"></div>
+            <h1 id="project-name" itemprop="name">Proje Yükleniyor...</h1>
+            <p class="project-summary" id="project-summary" itemprop="abstract"></p>
+
+            <div class="project-meta-bar" id="project-meta-bar"></div>
+
+            <div class="project-gallery">
+                <div class="project-gallery-main" id="gallery-main">
+                    <div class="placeholder-img" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem;font-family:var(--font-heading);color:var(--primary);">◱</div>
+                </div>
+                <div class="project-gallery-thumbs" id="gallery-thumbs"></div>
+            </div>
+
+            <section class="project-body-section" aria-labelledby="desc-title">
+                <h2 id="desc-title" class="project-body-title">Proje Hakkında</h2>
+                <div class="project-description" itemprop="description" id="project-description-text"></div>
+            </section>
+
+            <section class="project-body-section" id="project-details-section" aria-labelledby="details-title" style="display:none;">
+                <h2 id="details-title" class="project-body-title">Detaylar &amp; Özellikler</h2>
+                <div class="project-description" id="project-details-text"></div>
+            </section>
+        </article>
+
+        <div class="empty-state" id="project-not-found" style="display:none;">
+            <h3>Proje bulunamadı</h3>
+            <p>Aradığınız proje mevcut değil veya kaldırılmış olabilir.</p>
+            <a href="projeler.html" class="btn btn-primary" style="margin-top:20px;">Tüm Projelere Dön</a>
+        </div>
+
+        <section class="section" id="related-section" style="display:none;">
+            <div class="section-header">
+                <span class="eyebrow">Benzer Çalışmalar</span>
+                <h2>Aynı kategoride projeler</h2>
+                <hr class="divider">
+            </div>
+            <div class="projects-grid" id="related-projects"></div>
+        </section>
+
+    </div>
+</main>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Görsel büyütme">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Kapat">✕</button>
+    <img id="lightbox-img" src="" alt="">
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="footer-logo">
+                    <img src="favicon.svg" alt="" width="40" height="40">
+                    <div>
+                        <div class="name">Koçcihanoğlu</div>
+                        <div class="sub">Mimarlık</div>
+                    </div>
+                </div>
+                <p>Mekâna değer katan mimari çözümler.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Menü</h4>
+                <a href="index.html">Ana Sayfa</a>
+                <a href="projeler.html">Projeler</a>
+                <a href="hakkimizda.html">Hakkımızda</a>
+                <a href="iletisim.html">İletişim</a>
+            </div>
+            <div class="footer-col">
+                <h4>İletişim</h4>
+                <p><a href="#" data-site-setting="phone">+90 555 000 00 00</a></p>
+                <p><a href="#" data-site-setting="email">info@koccihanoglu.com</a></p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; <span id="footer-year">2025</span> Koçcihanoğlu Mimarlık. Tüm hakları saklıdır.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/common.js"></script>
+<script src="js/project.js"></script>
+</body>
+</html>

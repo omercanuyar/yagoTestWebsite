@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="theme-color" content="#2C2C2C">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta name="referrer" content="no-referrer">
+    <title>Yönetim</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- GİRİŞ EKRANI -->
+<div class="admin-login-page" id="admin-login-page">
+    <div class="admin-login-card">
+        <h2>Yönetim Paneli</h2>
+        <p class="subtitle">Devam etmek için giriş yapın</p>
+
+        <form id="login-form" style="display:none;" autocomplete="off">
+            <div class="login-error" id="login-error"></div>
+            <div class="form-group">
+                <label>Kullanıcı Adı</label>
+                <input type="text" class="form-input" id="login-username" maxlength="50" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Şifre</label>
+                <input type="password" class="form-input" id="login-password" maxlength="100" autocomplete="off">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg">Giriş Yap</button>
+        </form>
+
+        <div id="lockout-section" style="display:none;">
+            <p class="lockout-msg" id="lockout-msg">Çok fazla hatalı deneme. Lütfen bekleyin...</p>
+        </div>
+    </div>
+</div>
+
+<!-- ADMİN DASHBOARD -->
+<div class="admin-dashboard" id="admin-dashboard">
+    <button class="admin-toggle-sidebar" id="toggle-sidebar" type="button">☰</button>
+
+    <aside class="admin-sidebar" id="admin-sidebar">
+        <div class="sidebar-logo">
+            <h3>Koçcihanoğlu</h3>
+            <small>Yönetim Paneli</small>
+        </div>
+        <nav>
+            <a href="#" class="active" data-section="dashboard-section">◇ Dashboard</a>
+            <a href="#" data-section="projects-section">◱ Projeler</a>
+            <a href="#" data-section="categories-section">◳ Kategoriler</a>
+            <a href="#" data-section="settings-section">⚙ Ayarlar</a>
+            <a href="#" data-section="export-section">↓ Dışa Aktar</a>
+            <a href="#" id="logout-btn" style="margin-top:24px; color: rgba(255,255,255,0.35);">✕ Çıkış Yap</a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+
+        <!-- DASHBOARD -->
+        <div class="admin-section active" id="dashboard-section">
+            <div class="admin-header">
+                <h1>Dashboard</h1>
+            </div>
+            <div class="admin-stats">
+                <div class="admin-stat-card">
+                    <div class="stat-value" id="stat-projects">0</div>
+                    <div class="stat-label">Toplam Proje</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-value" id="stat-categories">0</div>
+                    <div class="stat-label">Kategori</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-value" id="stat-featured">0</div>
+                    <div class="stat-label">Öne Çıkan</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-value" id="stat-experience">—</div>
+                    <div class="stat-label">Yıl Tecrübe</div>
+                </div>
+            </div>
+            <h3 style="margin-bottom:18px; margin-top:10px;">Son Eklenen Projeler</h3>
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Görsel</th>
+                            <th>Proje Adı</th>
+                            <th>Kategori</th>
+                            <th>Yıl</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-projects-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PROJELER -->
+        <div class="admin-section" id="projects-section">
+            <div class="admin-header">
+                <h1>Projeler</h1>
+                <button class="btn btn-primary" id="btn-add-project" type="button">+ Yeni Proje Ekle</button>
+            </div>
+            <div id="no-category-warning" style="display:none; padding:18px 22px; background:#FDF4E0; border:1px solid #E8C98E; border-radius:var(--radius-md); margin-bottom:20px; color:#7C5A2A;">
+                <strong>⚠ Henüz kategori yok.</strong> Proje eklemek için önce <a href="#" data-section="categories-section" style="color:var(--primary-dark); text-decoration:underline;">Kategoriler</a> sekmesinden en az bir kategori eklemeniz gerekir.
+            </div>
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Görsel</th>
+                            <th>Proje Adı</th>
+                            <th>Kategori</th>
+                            <th>Konum</th>
+                            <th>Yıl</th>
+                            <th>Durum</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projects-table-body"></tbody>
+                </table>
+            </div>
+            <div class="empty-state" id="projects-empty" style="display:none;">
+                <h3>Henüz proje eklenmemiş</h3>
+                <p>"Yeni Proje Ekle" butonuyla ilk projenizi ekleyin.</p>
+            </div>
+        </div>
+
+        <!-- KATEGORİLER -->
+        <div class="admin-section" id="categories-section">
+            <div class="admin-header">
+                <h1>Kategoriler</h1>
+            </div>
+            <div style="max-width:560px;">
+                <div class="form-group" style="display:flex;gap:10px;">
+                    <input type="text" class="form-input" id="new-category-input" placeholder="Yeni kategori adı" maxlength="50">
+                    <button class="btn btn-primary" id="btn-add-category" type="button">Ekle</button>
+                </div>
+                <div id="categories-list" style="margin-top:18px;"></div>
+            </div>
+        </div>
+
+        <!-- AYARLAR -->
+        <div class="admin-section" id="settings-section">
+            <div class="admin-header">
+                <h1>Ayarlar</h1>
+            </div>
+            <div style="max-width:680px;">
+                <h3 style="margin-bottom:18px;">Genel</h3>
+                <div class="form-group">
+                    <label>Ofis Adı</label>
+                    <input type="text" class="form-input" id="setting-site-name" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label>Slogan / Tagline</label>
+                    <input type="text" class="form-input" id="setting-tagline" maxlength="200">
+                </div>
+
+                <h3 style="margin:28px 0 18px;">İletişim</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Telefon</label>
+                        <input type="text" class="form-input" id="setting-phone" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label>E-posta</label>
+                        <input type="email" class="form-input" id="setting-email" maxlength="150">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp (ülke kodu ile, boşluksuz)</label>
+                    <input type="text" class="form-input" id="setting-whatsapp" maxlength="20" placeholder="905XXXXXXXXX">
+                </div>
+                <div class="form-group">
+                    <label>Adres</label>
+                    <input type="text" class="form-input" id="setting-address" maxlength="250">
+                </div>
+                <div class="form-group">
+                    <label>Çalışma Saatleri</label>
+                    <input type="text" class="form-input" id="setting-hours" maxlength="100">
+                </div>
+
+                <h3 style="margin:28px 0 18px;">Sosyal Medya</h3>
+                <div class="form-group">
+                    <label>Instagram URL</label>
+                    <input type="url" class="form-input" id="setting-instagram" maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label>LinkedIn URL</label>
+                    <input type="url" class="form-input" id="setting-linkedin" maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label>Behance URL</label>
+                    <input type="url" class="form-input" id="setting-behance" maxlength="200">
+                </div>
+
+                <h3 style="margin:28px 0 18px;">Veritabanı Bağlantısı</h3>
+                <div class="form-group">
+                    <label>Firebase Realtime Database URL</label>
+                    <input type="url" class="form-input" id="setting-firebase-url" maxlength="250" placeholder="https://proje-adi-default-rtdb.firebaseio.com">
+                    <span class="form-hint">Bu alan doldurulduğunda projeler bulutta saklanır ve tüm ziyaretçilere görünür.</span>
+                </div>
+                <div id="firebase-status" style="margin-bottom:18px;"></div>
+
+                <h3 style="margin:28px 0 18px;">Hakkımızda İçeriği</h3>
+                <div class="form-group">
+                    <label>Hikâye</label>
+                    <textarea class="form-input" id="setting-about-story" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Misyon</label>
+                    <textarea class="form-input" id="setting-about-mission" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Vizyon</label>
+                    <textarea class="form-input" id="setting-about-vision" rows="3"></textarea>
+                </div>
+                <button class="btn btn-primary" id="btn-save-settings" type="button">Ayarları Kaydet</button>
+            </div>
+        </div>
+
+        <!-- DIŞA AKTAR -->
+        <div class="admin-section" id="export-section">
+            <div class="admin-header">
+                <h1>Veriyi Dışa / İçe Aktar</h1>
+            </div>
+            <div style="max-width:620px;">
+                <p style="color:var(--text-light);margin-bottom:20px;">
+                    Proje verilerinizi <strong>data.js</strong> dosyası olarak dışa aktarın.
+                    Bu dosyayı projenizin <code>js/</code> klasörüne koyarak sitenizi güncelleyebilirsiniz.
+                </p>
+                <button class="btn btn-primary btn-lg" id="btn-export" type="button">↓ data.js Olarak İndir</button>
+                <br><br>
+                <h3 style="margin-bottom:14px;">Veri İçe Aktar</h3>
+                <p style="color:var(--text-light);margin-bottom:14px;">Mevcut bir data.js dosyasından veri yükleyin.</p>
+                <input type="file" id="import-file" accept=".js" style="display:none;">
+                <button class="btn btn-secondary" id="btn-import" type="button">↑ data.js Yükle</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- PROJE EKLE/DÜZENLE MODAL -->
+<div class="modal-overlay" id="project-modal">
+    <div class="modal" style="max-width:720px;">
+        <div class="modal-header">
+            <h3 id="project-modal-title">Yeni Proje Ekle</h3>
+            <button class="modal-close" id="close-project-modal" type="button">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="project-form" class="admin-product-form" novalidate>
+                <input type="hidden" id="project-edit-id">
+                <div class="form-group">
+                    <label>Proje Adı <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="project-name" required maxlength="150" placeholder="Örn: Villa Sakin">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Kategori <span class="required">*</span></label>
+                        <select class="form-input" id="project-category" required>
+                            <option value="">Kategori seçin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Konum</label>
+                        <input type="text" class="form-input" id="project-location" maxlength="100" placeholder="Örn: İstanbul, Sarıyer">
+                    </div>
+                </div>
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>Yıl</label>
+                        <input type="text" class="form-input" id="project-year" maxlength="10" placeholder="2024">
+                    </div>
+                    <div class="form-group">
+                        <label>Alan</label>
+                        <input type="text" class="form-input" id="project-area" maxlength="30" placeholder="Örn: 420 m²">
+                    </div>
+                    <div class="form-group">
+                        <label>Durum</label>
+                        <input type="text" class="form-input" id="project-status" maxlength="50" placeholder="Tamamlandı / Devam ediyor">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>İşveren</label>
+                    <input type="text" class="form-input" id="project-client" maxlength="100" placeholder="Örn: Özel Müşteri">
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="project-is-featured"> Ana sayfada öne çıkan proje olarak göster
+                    </label>
+                </div>
+
+                <h4 style="margin:22px 0 14px; font-family:var(--font-heading); color:var(--primary-dark);">İçerik &amp; SEO</h4>
+
+                <div class="form-group">
+                    <label>Özet (SEO Meta Açıklama) <span class="required">*</span></label>
+                    <textarea class="form-input" id="project-summary" rows="2" required maxlength="200" placeholder="Projenin 1-2 cümlelik özeti. Google arama sonuçlarında ve sosyal medya paylaşımlarında görünür."></textarea>
+                    <span class="form-hint">En fazla 160-180 karakter tavsiye edilir. Anahtar kelimeleri doğal şekilde içermeli.</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Ana Açıklama / Detay <span class="required">*</span></label>
+                    <textarea class="form-input" id="project-description" rows="6" required placeholder="Projenin konsepti, bağlamı, tasarım yaklaşımı ve öne çıkan özellikleri. Satırları boş bırakarak paragraflara ayırabilirsiniz." maxlength="5000"></textarea>
+                    <span class="form-hint">Arama motorları için en değerli alan. Detaylı ve özgün yazın.</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Alt Bölüm (Detaylar &amp; Özellikler)</label>
+                    <textarea class="form-input" id="project-details" rows="5" placeholder="Kullanılan malzemeler, teknik çözümler, sürdürülebilirlik yaklaşımı, ödüller vb. Proje detay sayfasının alt kısmında ayrı bir bölüm olarak gösterilir." maxlength="5000"></textarea>
+                    <span class="form-hint">Opsiyonel — ama SEO için değerlidir. Teknik detaylar, malzeme bilgisi vb.</span>
+                </div>
+
+                <h4 style="margin:22px 0 14px; font-family:var(--font-heading); color:var(--primary-dark);">Görseller</h4>
+
+                <div class="form-group">
+                    <label>Vitrin (Kapak) Görseli</label>
+                    <div class="image-upload-area" id="cover-upload-area">
+                        <p>↑ Kapak görseli — listelerde ve sosyal medyada bu görsel kullanılır</p>
+                        <p style="font-size:0.82rem;">Tek görsel · JPEG / PNG / WebP</p>
+                    </div>
+                    <input type="file" id="cover-file-input" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                    <div class="image-previews" id="cover-preview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Galeri Görselleri</label>
+                    <div class="image-upload-area" id="image-upload-area">
+                        <p>↑ Detay galerisi — proje sayfasında tam boyutta gösterilir</p>
+                        <p style="font-size:0.82rem;">Maks. 8 görsel · JPEG / PNG / WebP · otomatik optimize edilir</p>
+                    </div>
+                    <input type="file" id="image-file-input" accept="image/jpeg,image/png,image/webp" multiple style="display:none;">
+                    <div class="image-previews" id="image-previews"></div>
+                </div>
+                <div class="modal-footer" style="padding:0;border:none;margin-top:12px;">
+                    <button type="button" class="btn btn-secondary" id="cancel-project-btn">İptal</button>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- SİLME ONAY MODAL -->
+<div class="modal-overlay" id="delete-modal">
+    <div class="modal" style="max-width:420px;">
+        <div class="modal-header">
+            <h3>Projeyi Sil</h3>
+            <button class="modal-close" id="close-delete-modal" type="button">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Bu projeyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.</p>
+            <p style="font-weight:700;margin-top:10px;" id="delete-project-name"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cancel-delete-btn" type="button">İptal</button>
+            <button class="btn btn-danger" id="confirm-delete-btn" type="button">Evet, Sil</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/common.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
