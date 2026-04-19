@@ -88,13 +88,57 @@
 
     /* ===== BAŞLATMA ===== */
     function init() {
-        if (isSessionValid()) { initDashboard(); return; }
+        /* Firebase Auth config varsa başlat */
+        var cfg = SITE_DATA.settings && SITE_DATA.settings.firebaseConfig;
+        if (cfg) initFirebaseAuth(cfg);
+
+        /* Firebase Auth varsa onAuthStateChanged dinle — otomatik oturum */
+        if (isFirebaseAuthReady()) {
+            firebase.auth().onAuthStateChanged(function(user) {
+                if (user) {
+                    clearAttempts();
+                    createSession();
+                    if (document.getElementById('admin-dashboard').classList.contains('active')) {
+                        refreshSession();
+                    } else {
+                        initDashboard();
+                    }
+                } else {
+                    /* Çıkış yapıldı veya oturum yok */
+                    if (document.getElementById('admin-dashboard').classList.contains('active')) {
+                        destroySession();
+                        location.reload();
+                    }
+                }
+            });
+        }
+
+        if (isSessionValid() && (!isFirebaseAuthReady() || firebase.auth().currentUser)) {
+            initDashboard();
+            return;
+        }
         showLogin();
+    }
+
+    function updateLoginModeBadge() {
+        var badge = document.getElementById('login-mode-badge');
+        var label = document.getElementById('login-username-label');
+        if (!badge || !label) return;
+        if (isFirebaseAuthReady()) {
+            badge.innerHTML = '<span style="color:var(--success);">● Firebase Auth aktif</span>';
+            label.textContent = 'E-posta';
+            document.getElementById('login-username').setAttribute('type', 'email');
+        } else {
+            badge.innerHTML = '<span style="color:var(--warning);">● Yerel mod (Firebase config eksik)</span>';
+            label.textContent = 'Kullanıcı Adı';
+            document.getElementById('login-username').setAttribute('type', 'text');
+        }
     }
 
     function showLogin() {
         var form = document.getElementById('login-form');
         form.style.display = 'block';
+        updateLoginModeBadge();
 
         form.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -112,6 +156,41 @@
                 return;
             }
 
+            /* Firebase Auth modu */
+            if (isFirebaseAuthReady()) {
+                var submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Giriş yapılıyor...'; }
+
+                firebase.auth().signInWithEmailAndPassword(u, p)
+                    .then(function() {
+                        clearAttempts();
+                        /* onAuthStateChanged dinleyicisi initDashboard çağıracak */
+                    })
+                    .catch(function(error) {
+                        recordFailedAttempt();
+                        var msg = 'Giriş başarısız. ';
+                        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+                            msg = 'E-posta veya şifre hatalı.';
+                        } else if (error.code === 'auth/invalid-email') {
+                            msg = 'Geçersiz e-posta formatı.';
+                        } else if (error.code === 'auth/too-many-requests') {
+                            msg = 'Çok fazla hatalı deneme. Firebase tarafından geçici olarak engellendi. Bir süre bekleyin.';
+                        } else if (error.code === 'auth/network-request-failed') {
+                            msg = 'Ağ hatası. İnternet bağlantınızı kontrol edin.';
+                        } else {
+                            msg = 'Hata: ' + (error.message || error.code || 'bilinmeyen');
+                        }
+                        err.textContent = msg;
+                        err.classList.add('show');
+                        if (isLockedOut()) showLockout();
+                    })
+                    .then(function() {
+                        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Giriş Yap'; }
+                    });
+                return;
+            }
+
+            /* Yerel mod (Firebase yok) — eski davranış */
             if (verifyCredentials(u, p)) {
                 clearAttempts();
                 createSession();
@@ -724,6 +803,30 @@
     }
 
     /* ===== AYARLAR ===== */
+    /* Firebase config bloğunu parse et (JSON veya JS nesne sözdizimi).
+       Örn: { apiKey: "...", authDomain: "..." } veya tam `const firebaseConfig = {...};` bloğu. */
+    function parseFirebaseConfig(text) {
+        if (!text) return null;
+        var trimmed = text.trim();
+        /* Saf JSON dene */
+        try {
+            if (trimmed.charAt(0) === '{') {
+                var obj = JSON.parse(trimmed);
+                if (obj && obj.apiKey) return obj;
+            }
+        } catch(e) {}
+        /* JS sözdizimi — regex ile key-value çıkar */
+        var keys = ['apiKey', 'authDomain', 'databaseURL', 'projectId', 'storageBucket', 'messagingSenderId', 'appId', 'measurementId'];
+        var result = {};
+        for (var i = 0; i < keys.length; i++) {
+            var re = new RegExp('["\']?' + keys[i] + '["\']?\\s*[:=]\\s*["\']([^"\']+)["\']');
+            var m = text.match(re);
+            if (m) result[keys[i]] = m[1];
+        }
+        if (!result.apiKey || !result.authDomain) return null;
+        return result;
+    }
+
     function initSettingsForm() {
         document.getElementById('btn-save-settings').addEventListener('click', function() {
             var s = workingData.settings;
@@ -740,16 +843,41 @@
             s.social.linkedin = document.getElementById('setting-linkedin').value.trim();
             s.social.behance = document.getElementById('setting-behance').value.trim();
 
-            var fb = document.getElementById('setting-firebase-url').value.trim().replace(/\/+$/, '');
+            /* Firebase Config - textarea'dan parse et */
+            var cfgText = document.getElementById('setting-firebase-config').value.trim();
+            var parsedCfg = cfgText ? parseFirebaseConfig(cfgText) : null;
+            if (cfgText && !parsedCfg) {
+                showToast('Firebase config çözümlenemedi. apiKey/authDomain/databaseURL içermeli.', 'error');
+                return;
+            }
+            if (parsedCfg) {
+                s.firebaseConfig = parsedCfg;
+                SITE_DATA.settings.firebaseConfig = parsedCfg;
+                try { localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(parsedCfg)); } catch(e) {}
+            } else {
+                delete s.firebaseConfig;
+                delete SITE_DATA.settings.firebaseConfig;
+                try { localStorage.removeItem(FIREBASE_CONFIG_KEY); } catch(e) {}
+            }
+
+            var fb = (parsedCfg && parsedCfg.databaseURL)
+                ? parsedCfg.databaseURL.replace(/\/+$/, '')
+                : document.getElementById('setting-firebase-url').value.trim().replace(/\/+$/, '');
             s.firebaseURL = fb;
             SITE_DATA.settings.firebaseURL = fb;
-            /* Firebase URL'i localStorage'a yaz — sayfa yenilense bile
-               bu tarayıcıda korunur. Ziyaretçilerin de görmesi için ayrıca
-               Dışa Aktar ile data.js indirilip repo'ya yüklenmeli. */
+            document.getElementById('setting-firebase-url').value = fb;
             try {
                 if (fb) localStorage.setItem(FIREBASE_URL_KEY, fb);
                 else localStorage.removeItem(FIREBASE_URL_KEY);
             } catch(e) {}
+
+            /* Firebase Auth'u başlat (config yeni girildiyse) */
+            if (parsedCfg && !isFirebaseAuthReady()) {
+                initFirebaseAuth(parsedCfg);
+                if (isFirebaseAuthReady()) {
+                    showToast('Firebase Auth aktif — bir sonraki girişte e-posta/şifre kullanın', 'success');
+                }
+            }
 
             if (!s.about) s.about = {};
             s.about.story = document.getElementById('setting-about-story').value.trim();
@@ -815,6 +943,8 @@
         document.getElementById('setting-linkedin').value = (s.social && s.social.linkedin) || '';
         document.getElementById('setting-behance').value = (s.social && s.social.behance) || '';
         document.getElementById('setting-firebase-url').value = s.firebaseURL || SITE_DATA.settings.firebaseURL || '';
+        var cfg = s.firebaseConfig || SITE_DATA.settings.firebaseConfig;
+        document.getElementById('setting-firebase-config').value = cfg ? JSON.stringify(cfg, null, 2) : '';
         document.getElementById('setting-about-story').value = (s.about && s.about.story) || '';
         document.getElementById('setting-about-mission').value = (s.about && s.about.mission) || '';
         document.getElementById('setting-about-vision').value = (s.about && s.about.vision) || '';
@@ -825,11 +955,27 @@
         var el = document.getElementById('firebase-status');
         if (!el) return;
         var url = _getFirebaseURL();
+        var authActive = isFirebaseAuthReady();
+        var currentUser = authActive && firebase.auth().currentUser;
+        var lines = [];
+
         if (url) {
-            el.innerHTML = '<span style="color: var(--success); font-weight:600;">\u2713 Bulut veritaban\u0131 ba\u011fl\u0131 - projeler t\u00fcm ziyaret\u00e7ilere g\u00f6r\u00fcn\u00fcr</span>';
+            lines.push('<span style="color:var(--success); font-weight:600;">✓ Realtime Database bağlı</span>');
         } else {
-            el.innerHTML = '<span style="color: var(--warning); font-weight:600;">\u26a0 Bulut veritaban\u0131 ba\u011fl\u0131 de\u011fil - projeler sadece bu taray\u0131c\u0131da g\u00f6r\u00fcn\u00fcr</span>';
+            lines.push('<span style="color:var(--warning); font-weight:600;">⚠ Realtime Database URL\'i yok</span>');
         }
+
+        if (authActive) {
+            if (currentUser) {
+                lines.push('<span style="color:var(--success); font-weight:600;">✓ Firebase Auth aktif — giriş: ' + sanitize(currentUser.email || '') + '</span>');
+            } else {
+                lines.push('<span style="color:var(--warning); font-weight:600;">⚠ Firebase Auth hazır ama giriş yapılmamış</span>');
+            }
+        } else {
+            lines.push('<span style="color:var(--warning); font-weight:600;">⚠ Firebase Auth kapalı — kurallar yazma için auth gerektiriyorsa yazma başarısız olur</span>');
+        }
+
+        el.innerHTML = lines.join('<br>');
     }
 
     /* ===== DIŞA AKTAR ===== */
@@ -886,6 +1032,10 @@
         document.getElementById('logout-btn').addEventListener('click', function(e) {
             e.preventDefault();
             destroySession();
+            /* Firebase Auth aktifse imza çıkışı da yap */
+            if (isFirebaseAuthReady() && firebase.auth().currentUser) {
+                firebase.auth().signOut().catch(function(err) { console.warn(err); });
+            }
             location.reload();
         });
     }

@@ -25,13 +25,14 @@
 
         <form id="login-form" style="display:none;" autocomplete="off">
             <div class="login-error" id="login-error"></div>
+            <div id="login-mode-badge" style="margin-bottom:14px; text-align:center; font-size:0.82rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted);"></div>
             <div class="form-group">
-                <label>Kullanıcı Adı</label>
-                <input type="text" class="form-input" id="login-username" maxlength="50" autocomplete="off">
+                <label id="login-username-label">E-posta / Kullanıcı Adı</label>
+                <input type="text" class="form-input" id="login-username" maxlength="100" autocomplete="username">
             </div>
             <div class="form-group">
                 <label>Şifre</label>
-                <input type="password" class="form-input" id="login-password" maxlength="100" autocomplete="off">
+                <input type="password" class="form-input" id="login-password" maxlength="100" autocomplete="current-password">
             </div>
             <button type="submit" class="btn btn-primary btn-block btn-lg">Giriş Yap</button>
         </form>
@@ -202,20 +203,39 @@
                     <input type="url" class="form-input" id="setting-behance" maxlength="200">
                 </div>
 
-                <h3 style="margin:28px 0 18px;">Veritabanı Bağlantısı</h3>
+                <h3 style="margin:28px 0 18px;">Firebase Bağlantısı</h3>
+
                 <div class="form-group">
-                    <label>Firebase Realtime Database URL</label>
-                    <div style="display:flex; gap:10px; align-items:stretch;">
-                        <input type="url" class="form-input" id="setting-firebase-url" maxlength="250" placeholder="https://proje-adi-default-rtdb.firebaseio.com" style="flex:1;">
-                        <button type="button" class="btn btn-secondary" id="btn-test-firebase" style="white-space:nowrap;">Test Et</button>
-                    </div>
+                    <label>Firebase Web Config (JS veya JSON)</label>
+                    <textarea class="form-input" id="setting-firebase-config" rows="10" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "proje-adi.firebaseapp.com",
+  "databaseURL": "https://proje-adi-default-rtdb.firebaseio.com",
+  "projectId": "proje-adi",
+  "storageBucket": "proje-adi.appspot.com",
+  "messagingSenderId": "1234567890",
+  "appId": "1:1234:web:abc"
+}' style="font-family:monospace; font-size:0.86rem;"></textarea>
                     <span class="form-hint">
-                        <strong>1.</strong> URL'i yapıştır → <strong>Test Et</strong> ile bağlantıyı doğrula → <strong>Ayarları Kaydet</strong>.<br>
-                        <strong>2.</strong> Kaydettikten sonra <strong>Dışa Aktar</strong> sekmesinden <code>data.js</code>'i indir ve repo'nun <code>js/</code> klasörüne yükle — yoksa ziyaretçiler projeleri göremez.<br>
-                        Örnek URL: <code>https://proje-adi-default-rtdb.firebaseio.com</code> — sonuna <code>.json</code> eklemeyin.
+                        Firebase Console → Project Settings → General → "Your apps" → Web app → <strong>SDK setup and configuration</strong> → Config kısmındaki bloğu kopyala ve buraya yapıştır.<br>
+                        <code>apiKey</code>, <code>authDomain</code> ve <code>databaseURL</code> zorunludur.
                     </span>
                 </div>
+
+                <div class="form-group">
+                    <label>Firebase Realtime Database URL (otomatik doldurulur)</label>
+                    <div style="display:flex; gap:10px; align-items:stretch;">
+                        <input type="url" class="form-input" id="setting-firebase-url" maxlength="250" placeholder="https://proje-adi-default-rtdb.firebaseio.com" style="flex:1;" readonly>
+                        <button type="button" class="btn btn-secondary" id="btn-test-firebase" style="white-space:nowrap;">Test Et</button>
+                    </div>
+                    <span class="form-hint">Yukarıdaki config'ten otomatik çekilir. <strong>Test Et</strong> ile bağlantıyı doğrula.</span>
+                </div>
+
                 <div id="firebase-status" style="margin-bottom:18px; padding:12px 16px; background:var(--bg-alt); border-radius:var(--radius-sm); min-height:20px;"></div>
+
+                <div style="padding:14px 18px; background:#FDF4E0; border:1px solid #E8C98E; border-radius:var(--radius-md); color:#7C5A2A; font-size:0.9rem; margin-bottom:18px;">
+                    <strong>Önemli:</strong> Bu bilgileri her tarayıcı için ayrı girmen gerekmez — kaydet → <strong>Dışa Aktar</strong> sekmesinden <code>data.js</code>'i indir → repo'ya yükle. Böylece tüm ziyaretçiler/adminler aynı config'i görür.
+                </div>
 
                 <h3 style="margin:28px 0 18px;">Hakkımızda İçeriği</h3>
                 <div class="form-group">
@@ -376,6 +396,10 @@
         </div>
     </div>
 </div>
+
+<!-- Firebase Auth SDK (sadece admin paneli için) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
 <script src="js/data.js"></script>
 <script src="js/common.js"></script>

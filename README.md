@@ -77,18 +77,26 @@ Açık yazma kurallarıyla (`".write": true`) bırakılırsa, Firebase URL'ini e
 }
 ```
 
-Bu kuralla yalnızca Firebase Console'dan oluşturduğunuz belirli e-posta sahibi admin yazabilir. Uygulamak için:
+Bu kuralla yalnızca Firebase Console'dan oluşturduğunuz belirli e-posta sahibi admin yazabilir. Uygulama adımları:
 
-1. Firebase Console > **Authentication** > Sign-in method > **Email/Password** aktif.
-2. Authentication > Users > Add user → admin e-posta + şifre.
-3. Yukarıdaki kuralı uygulayın.
-4. Admin panelinin Firebase Auth SDK ile entegre edilmesi gerekir — bu README tamamen statik setup içindir; Auth entegrasyonu eklenecekse bir adım daha gereklidir.
+1. **Firebase Console > Authentication > Sign-in method** → Email/Password aktif et.
+2. **Authentication > Users > Add user** → admin e-posta + güçlü şifre.
+3. Realtime Database > Rules'a yukarıdaki kuralı yapıştır, **Publish**.
+4. **Firebase Console > Project Settings > General > Your apps > Web app** oluştur (yoksa) ve SDK config bloğunu kopyala (apiKey, authDomain, databaseURL vs.).
+5. Admin paneline **statik kimlikle gir** (`kcadmin` / `Koc@Mim2025!`).
+6. **Ayarlar > Firebase Web Config** alanına config'i yapıştır → **Ayarları Kaydet**.
+7. Sağ üstten **Çıkış** → tekrar giriş ekranında "Firebase Auth aktif" yazısını gör → **e-posta ve şifre** ile giriş yap.
+8. **Dışa Aktar > data.js İndir** → indirilen dosyayı `js/data.js`'in üzerine koy → repo'ya commit et. Böylece diğer cihazlardan da admin paneline aynı config ile girilebilir.
+
+> Firebase Auth ID token'ı her yazma isteğine `?auth=TOKEN` olarak eklenir. Token 1 saatte bir otomatik yenilenir.
+> Config değerlerinin (apiKey vs.) herkese açık olması beklenen davranıştır — güvenlik **kurallarda** ve **e-posta/şifre** kombinasyonundadır.
 
 ### Üretime geçmeden yapılacaklar (checklist)
 
-- [ ] Admin kullanıcı/şifresini `js/admin.js` içinden değiştir
-- [ ] Firebase yazma kuralını `auth != null` olarak sıkılaştır
-- [ ] Firebase Auth entegrasyonu ekle (gerçek bir giriş için)
+- [ ] Firebase Auth kurulumunu yukarıdaki 8 adıma göre tamamla
+- [ ] Firebase yazma kuralını e-postaya bağla (yukarıdaki önerilen kural)
+- [ ] Firebase Auth aktifleştikten sonra `js/admin.js`'teki statik `_gc()` kimliğini devre dışı bırak veya çok güçlü bir şeye çevir (yerel fallback)
+- [ ] `data.js`'i export edip repo'ya commit et
 - [ ] GitHub Pages HTTPS zaten aktiftir — custom domain eklenecekse yine HTTPS zorunlu kılınmalı
 
 ### Ne İyi Yapılmış?

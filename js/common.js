@@ -8,20 +8,63 @@
 var _cloudDataReady = false;
 var _cloudCallbacks = [];
 var FIREBASE_URL_KEY = 'kc_firebase_url';
+var FIREBASE_CONFIG_KEY = 'kc_firebase_config';
+var _firebaseInitialized = false;
 
-/* Bootstrapping: localStorage'da kayıtlı Firebase URL varsa SITE_DATA'ya yükle.
-   data.js statik olduğu için admin panelinde yapılan URL değişikliği bu sayede
+/* Bootstrapping: localStorage'da kayıtlı Firebase URL/config varsa SITE_DATA'ya yükle.
+   data.js statik olduğu için admin panelinde yapılan değişiklikler bu sayede
    sayfa yenilemesinden sonra da korunur (aynı tarayıcı için). */
-(function bootstrapFirebaseURL() {
+(function bootstrapFirebase() {
     try {
         if (typeof SITE_DATA === 'undefined') return;
         if (!SITE_DATA.settings) SITE_DATA.settings = {};
-        var stored = localStorage.getItem(FIREBASE_URL_KEY);
-        if (stored && !SITE_DATA.settings.firebaseURL) {
-            SITE_DATA.settings.firebaseURL = stored;
+
+        /* Firebase Config */
+        var storedCfg = localStorage.getItem(FIREBASE_CONFIG_KEY);
+        if (storedCfg && !SITE_DATA.settings.firebaseConfig) {
+            try { SITE_DATA.settings.firebaseConfig = JSON.parse(storedCfg); } catch(e) {}
+        }
+
+        /* Firebase URL */
+        var storedUrl = localStorage.getItem(FIREBASE_URL_KEY);
+        var cfg = SITE_DATA.settings.firebaseConfig;
+        if (!SITE_DATA.settings.firebaseURL) {
+            SITE_DATA.settings.firebaseURL = storedUrl || (cfg && cfg.databaseURL) || '';
         }
     } catch(e) { /* localStorage engellenmiş olabilir */ }
 })();
+
+/* Firebase Auth SDK başlat — admin sayfasında yüklüyse */
+function initFirebaseAuth(config) {
+    if (_firebaseInitialized) return true;
+    if (typeof firebase === 'undefined' || !firebase.initializeApp) return false;
+    if (!config || !config.apiKey || !config.authDomain) return false;
+    try {
+        firebase.initializeApp({
+            apiKey: config.apiKey,
+            authDomain: config.authDomain,
+            databaseURL: config.databaseURL || (SITE_DATA.settings && SITE_DATA.settings.firebaseURL) || '',
+            projectId: config.projectId || '',
+            appId: config.appId || ''
+        });
+        _firebaseInitialized = true;
+        return true;
+    } catch(e) {
+        console.error('Firebase init hatası:', e);
+        return false;
+    }
+}
+
+function isFirebaseAuthReady() {
+    return _firebaseInitialized && typeof firebase !== 'undefined' && firebase.auth;
+}
+
+function getCurrentAuthToken() {
+    if (!isFirebaseAuthReady()) return Promise.resolve('');
+    var user = firebase.auth().currentUser;
+    if (!user) return Promise.resolve('');
+    return user.getIdToken().catch(function() { return ''; });
+}
 
 function onCloudDataReady(fn) {
     if (_cloudDataReady) {
@@ -74,12 +117,19 @@ function loadFromCloud() {
 function saveToCloud(data) {
     var url = _getFirebaseURL();
     if (!url) return Promise.resolve({ skipped: true });
-    var payload = JSON.parse(JSON.stringify(data));
-    if (payload.settings) delete payload.settings.firebaseURL;
-    return fetch(url + '/site.json', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+
+    return getCurrentAuthToken().then(function(token) {
+        var payload = JSON.parse(JSON.stringify(data));
+        if (payload.settings) {
+            delete payload.settings.firebaseURL;
+            delete payload.settings.firebaseConfig;
+        }
+        var fetchUrl = url + '/site.json' + (token ? '?auth=' + encodeURIComponent(token) : '');
+        return fetch(fetchUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
     }).then(function(res) {
         if (!res.ok) {
             return res.text().then(function(body) {
@@ -92,8 +142,8 @@ function saveToCloud(data) {
     }).catch(function(err) {
         if (typeof showToast === 'function') {
             var msg = 'Bulut kaydı başarısız: ' + (err && err.message ? err.message : 'bilinmeyen hata');
-            if (err && err.status === 401) msg = 'Firebase: yetkisiz (401) — kurallar yazmayı reddediyor.';
-            else if (err && err.status === 403) msg = 'Firebase: erişim reddedildi (403) — kurallar yazmayı reddediyor.';
+            if (err && err.status === 401) msg = 'Firebase: yetkisiz (401) — oturum süresi dolmuş olabilir, çıkış yapıp tekrar giriş yapın.';
+            else if (err && err.status === 403) msg = 'Firebase: erişim reddedildi (403) — kurallar bu kullanıcının yazmasına izin vermiyor.';
             else if (err && err.status === 404) msg = 'Firebase: veritabanı bulunamadı (404) — URL yanlış olabilir.';
             showToast(msg, 'error');
         }
@@ -102,27 +152,31 @@ function saveToCloud(data) {
     });
 }
 
-/* Firebase URL'ini test et — veritabanına bir ping yazar ve siler. */
+/* Firebase URL'ini test et — veritabanına bir ping yazar ve siler.
+   Kimlikli kullanıcı varsa token ekler (kurallı ortam için kritik). */
 function testCloudConnection(testUrl) {
     var url = (testUrl || '').replace(/\/+$/, '');
     if (!url) return Promise.reject(new Error('URL boş'));
-    var probe = url + '/_connection_test.json';
     var now = Date.now();
-    return fetch(probe, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ts: now })
-    }).then(function(res) {
-        if (!res.ok) {
-            return res.text().then(function(body) {
-                var err = new Error('HTTP ' + res.status + (body ? (' — ' + body.slice(0, 160)) : ''));
-                err.status = res.status;
-                throw err;
-            });
-        }
-        /* Test kaydını temizle */
-        fetch(probe, { method: 'DELETE' }).catch(function() {});
-        return { ok: true, latency: Date.now() - now };
+
+    return getCurrentAuthToken().then(function(token) {
+        var probe = url + '/_connection_test.json' + (token ? '?auth=' + encodeURIComponent(token) : '');
+        return fetch(probe, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ts: now })
+        }).then(function(res) {
+            if (!res.ok) {
+                return res.text().then(function(body) {
+                    var err = new Error('HTTP ' + res.status + (body ? (' — ' + body.slice(0, 160)) : ''));
+                    err.status = res.status;
+                    throw err;
+                });
+            }
+            /* Test kaydını temizle (best-effort) */
+            fetch(probe, { method: 'DELETE' }).catch(function() {});
+            return { ok: true, latency: Date.now() - now, authenticated: !!token };
+        });
     });
 }
 
